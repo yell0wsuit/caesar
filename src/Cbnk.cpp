@@ -107,7 +107,7 @@ double ConvertSustain(uint8_t sustain)
 	}
 }
 
-void dumpInstrumentMetadata(const string &outputFile, vector<bank> &banks) {
+void dumpInstrumentMetadata(const string &outputFile, vector<CbnkInst> &instruments) {
     ofstream ofs(outputFile);
 
     if (!ofs.is_open()) {
@@ -117,28 +117,26 @@ void dumpInstrumentMetadata(const string &outputFile, vector<bank> &banks) {
 
     ofs << "[Instruments]\n";
 
-    for (auto &b : banks) {
-        for (int i = 0; i < 128; ++i) {
-            if (b.instruments[i].exists) {
-                ofs << "Instrument " << i << "\n";
-                ofs << "Program Number: " << static_cast<int>(b.instruments[i].prgNumber) << "\n";
-                ofs << "Type: " << hex << b.instruments[i].type << dec << "\n";
-                ofs << "Note Count: " << b.instruments[i].noteCount << "\n";
+    for (size_t i = 0; i < instruments.size(); ++i) {
+        if (instruments[i].Exists) {
+            ofs << "Instrument " << i << "\n";
+            ofs << "Program Number: " << static_cast<int>(instruments[i].prgNumber) << "\n";
+            ofs << "Type: " << hex << instruments[i].type << dec << "\n";
+            ofs << "Note Count: " << instruments[i].noteCount << "\n";
 
-                for (uint32_t j = 0; j < b.instruments[i].noteCount; ++j) {
-                    if (b.instruments[i].notes[j].exists) {
-                        ofs << "  Note Region " << j << "\n";
-                        ofs << "    Start Note: " << static_cast<int>(b.instruments[i].notes[j].startNote) << "\n";
-                        ofs << "    End Note: " << static_cast<int>(b.instruments[i].notes[j].endNote) << "\n";
-                        ofs << "    Base Note: " << b.instruments[i].notes[j].baseNote << "\n";
-                        ofs << "    Volume: " << static_cast<int>(b.instruments[i].notes[j].volume) << "\n";
-                        ofs << "    Pan: " << static_cast<int>(b.instruments[i].notes[j].pan) << "\n";
-                        ofs << "    Attack: " << static_cast<int>(b.instruments[i].notes[j].attack) << "\n";
-                        ofs << "    Hold: " << static_cast<int>(b.instruments[i].notes[j].hold) << "\n";
-                        ofs << "    Decay: " << static_cast<int>(b.instruments[i].notes[j].decay) << "\n";
-                        ofs << "    Sustain: " << static_cast<int>(b.instruments[i].notes[j].sustain) << "\n";
-                        ofs << "    Release: " << static_cast<int>(b.instruments[i].notes[j].release) << "\n";
-                    }
+            for (uint32_t j = 0; j < instruments[i].noteCount; ++j) {
+                if (instruments[i].Notes[j].Exists) {
+                    ofs << "  Note Region " << j << "\n";
+                    ofs << "    Start Note: " << static_cast<int>(instruments[i].Notes[j].startNote) << "\n";
+                    ofs << "    End Note: " << static_cast<int>(instruments[i].Notes[j].endNote) << "\n";
+                    ofs << "    Base Note: " << instruments[i].Notes[j].RootKey << "\n";
+                    ofs << "    Volume: " << static_cast<int>(instruments[i].Notes[j].Volume) << "\n";
+                    ofs << "    Pan: " << static_cast<int>(instruments[i].Notes[j].Pan) << "\n";
+                    ofs << "    Attack: " << static_cast<int>(instruments[i].Notes[j].Attack) << "\n";
+                    ofs << "    Hold: " << static_cast<int>(instruments[i].Notes[j].Hold) << "\n";
+                    ofs << "    Decay: " << static_cast<int>(instruments[i].Notes[j].Decay) << "\n";
+                    ofs << "    Sustain: " << static_cast<int>(instruments[i].Notes[j].Sustain) << "\n";
+                    ofs << "    Release: " << static_cast<int>(instruments[i].Notes[j].Release) << "\n";
                 }
             }
         }
