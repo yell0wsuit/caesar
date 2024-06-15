@@ -30,8 +30,9 @@ jobs:
 
     - name: Archive Release
       run: |
-        mkdir -Force build\release
-        Copy-Item -Path build\Release\* -Destination build\release\ -Recurse -Force
+        $tempDir = New-Item -ItemType Directory -Path "$(Build.ArtifactStagingDirectory)\release"
+        Copy-Item -Path build\Release\* -Destination $tempDir.FullName -Recurse -Force
+        Compress-Archive -Path $tempDir.FullName\* -DestinationPath build\release.zip
 
     - name: Create Release
       id: create_release
@@ -50,6 +51,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: build/release
+        asset_path: build/release.zip
         asset_name: my_project.zip
         asset_content_type: application/zip
