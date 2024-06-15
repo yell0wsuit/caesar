@@ -120,8 +120,7 @@ void dumpInstrumentMetadata(const string &outputFile, vector<CbnkInst> &instrume
     for (size_t i = 0; i < instruments.size(); ++i) {
         if (instruments[i].Exists) {
             ofs << "Instrument " << i << "\n";
-            ofs << "Program Number: " << static_cast<int>(instruments[i].ProgramNumber) << "\n";
-            ofs << "Type: " << hex << instruments[i].Type << dec << "\n";
+            ofs << "Program Number: " << static_cast<int>(instruments[i].instType) << "\n";
             ofs << "Note Count: " << instruments[i].NoteCount << "\n";
 
             for (uint32_t j = 0; j < instruments[i].NoteCount; ++j) {
