@@ -120,15 +120,15 @@ void dumpInstrumentMetadata(const string &outputFile, vector<CbnkInst> &instrume
     for (size_t i = 0; i < instruments.size(); ++i) {
         if (instruments[i].Exists) {
             ofs << "Instrument " << i << "\n";
-            ofs << "Program Number: " << static_cast<int>(instruments[i].prgNumber) << "\n";
-            ofs << "Type: " << hex << instruments[i].type << dec << "\n";
-            ofs << "Note Count: " << instruments[i].noteCount << "\n";
+            ofs << "Program Number: " << static_cast<int>(instruments[i].ProgramNumber) << "\n";
+            ofs << "Type: " << hex << instruments[i].Type << dec << "\n";
+            ofs << "Note Count: " << instruments[i].NoteCount << "\n";
 
-            for (uint32_t j = 0; j < instruments[i].noteCount; ++j) {
+            for (uint32_t j = 0; j < instruments[i].NoteCount; ++j) {
                 if (instruments[i].Notes[j].Exists) {
                     ofs << "  Note Region " << j << "\n";
-                    ofs << "    Start Note: " << static_cast<int>(instruments[i].Notes[j].startNote) << "\n";
-                    ofs << "    End Note: " << static_cast<int>(instruments[i].Notes[j].endNote) << "\n";
+                    ofs << "    Start Note: " << static_cast<int>(instruments[i].Notes[j].StartNote) << "\n";
+                    ofs << "    End Note: " << static_cast<int>(instruments[i].Notes[j].EndNote) << "\n";
                     ofs << "    Base Note: " << instruments[i].Notes[j].RootKey << "\n";
                     ofs << "    Volume: " << static_cast<int>(instruments[i].Notes[j].Volume) << "\n";
                     ofs << "    Pan: " << static_cast<int>(instruments[i].Notes[j].Pan) << "\n";
