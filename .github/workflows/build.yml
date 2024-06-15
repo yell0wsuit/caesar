@@ -36,7 +36,7 @@ jobs:
 
     - name: Extract tag name
       id: extract_tag
-      run: echo ::set-output name=tag::${GITHUB_REF#refs/tags/}
+      run: echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
 
     - name: Create Release
       id: create_release
@@ -44,8 +44,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ steps.extract_tag.outputs.tag }}
-        release_name: Release ${{ steps.extract_tag.outputs.tag }}
+        tag_name: ${{ env.tag }}
+        release_name: Release ${{ env.tag }}
         draft: false
         prerelease: false
 
