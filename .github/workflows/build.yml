@@ -33,7 +33,7 @@ jobs:
       shell: pwsh
       run: |
         git fetch --tags
-        $latestTag = git describe --tags (git rev-list --tags --max-count=1)
+        $latestTag = git tag -l | Sort-Object -Descending | Select-Object -First 1
         if (-not $latestTag) {
           $nextTag = "v1.0.0"
         } else {
@@ -41,8 +41,8 @@ jobs:
           $versionParts[-1] = [int]$versionParts[-1] + 1
           $nextTag = $versionParts -join '.'
         }
-        echo "Latest tag: $latestTag"
-        echo "Next tag: $nextTag"
+        Write-Output "Latest tag: $latestTag"
+        Write-Output "Next tag: $nextTag"
         echo "NEXT_TAG=$nextTag" >> $env:GITHUB_ENV
 
     - name: Create and push tag
@@ -50,6 +50,8 @@ jobs:
         NEXT_TAG: ${{ env.NEXT_TAG }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
+        git config user.name "github-actions"
+        git config user.email "github-actions@github.com"
         git tag $env:NEXT_TAG
         git push origin $env:NEXT_TAG
 
