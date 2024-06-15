@@ -617,7 +617,7 @@ bool Cbnk::Convert(string cwarPath)
 	ofs.close();
 
 	// Dump instrument metadata to a text file
-	dumpInstrumentMetadata(FileName.substr(0, FileName.length() - 5).append("_metadata.txt"), insts);
+	dumpInstrumentMetadata(FileName.substr(0, FileName.length() - 5).append("_metadata.txt"), insts, cwarPath, *Cwars);
 
 	return true;
 }
