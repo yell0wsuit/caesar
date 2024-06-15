@@ -30,8 +30,10 @@ jobs:
 
     - name: Archive Release
       run: |
-        mkdir build\release
-        xcopy build\Release\* build\release\ /s /e
+        if (-Not (Test-Path -Path build\release)) {
+          New-Item -ItemType Directory -Path build\release
+        }
+        Copy-Item -Path build\Release\* -Destination build\release -Recurse
 
     - name: Create Release
       id: create_release
