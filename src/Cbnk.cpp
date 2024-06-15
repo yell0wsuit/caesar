@@ -107,7 +107,7 @@ double ConvertSustain(uint8_t sustain)
 	}
 }
 
-void dumpInstrumentMetadata(const string &outputFile, vector<CbnkInst> &instruments, const string &cwarPath, const map<int, Cwar*> &cwars) {
+void dumpInstrumentMetadata(const string &outputFile, vector<CbnkInst> &instruments, const string &cwarPath, const vector<CbnkCwav> &cwavs, const map<int, Cwar*> &cwars) {
     ofstream ofs(outputFile);
 
     if (!ofs.is_open()) {
@@ -126,14 +126,13 @@ void dumpInstrumentMetadata(const string &outputFile, vector<CbnkInst> &instrume
             for (uint32_t j = 0; j < instruments[i].NoteCount; ++j) {
                 if (instruments[i].Notes[j].Exists) {
 					// Add sample audio file path
-                    if (instruments[i].Notes[j].Cwav != nullptr) {
-                        const auto &cwav = *instruments[i].Notes[j].Cwav;
-                        auto it = cwars.find(cwav.Cwar);
-                        if (it != cwars.end()) {
-                            const auto &cwar = *it->second;
-                            string sampleFilePath = cwarPath + "/" + cwar.FileName.substr(0, cwar.FileName.length() - 6) + "/" + to_string(cwav.Id) + ".wav";
-                            ofs << "    Sample: " << sampleFilePath << "\n";
-                        }
+                    uint32_t cwavId = instruments[i].Notes[j].Cwav;
+                    const auto &cwav = cwavs[cwavId];
+                    auto it = cwars.find(cwav.Cwar);
+                    if (it != cwars.end()) {
+                        const auto &cwar = *it->second;
+                        string sampleFilePath = cwarPath + "/" + cwar.FileName.substr(0, cwar.FileName.length() - 6) + "/" + to_string(cwav.Id) + ".wav";
+                        ofs << "    Sample: " << sampleFilePath << "\n";
                     }
                     ofs << "        Note Region " << j << "\n";
                     ofs << "          Start Note: " << static_cast<int>(instruments[i].Notes[j].StartNote) << "\n";
@@ -617,7 +616,7 @@ bool Cbnk::Convert(string cwarPath)
 	ofs.close();
 
 	// Dump instrument metadata to a text file
-	dumpInstrumentMetadata(FileName.substr(0, FileName.length() - 5).append("_metadata.txt"), insts, cwarPath, *Cwars);
+	dumpInstrumentMetadata(FileName.substr(0, FileName.length() - 5).append("_metadata.txt"), insts, cwarPath, cwavs, *Cwars);
 
 	return true;
 }
