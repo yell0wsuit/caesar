@@ -125,21 +125,21 @@ void PrintAllDetails(const vector<CbnkInst> &instruments, const vector<CbnkCwav>
         outputFile << "  Program Number: " << i << "\n";
         outputFile << "  Note Count: " << instruments[i].NoteCount << "\n";
 
-        for (uint32_t j = 0; j < instruments[i].Notes.size(); ++j)
+        for (size_t j = 0; j < instruments[i].Notes.size(); ++j)
         {
             const CbnkCwav *sample = instruments[i].Notes[j].Cwav;
-            outputFile << "        Sample: " << sample->Id << "\n";
+            outputFile << "        Sample: " << static_cast<int>(sample->Id) << "\n";
             outputFile << "        Note Region " << j << "\n";
-            outputFile << "          Start Note: " << instruments[i].Notes[j].StartNote << "\n";
-            outputFile << "          End Note: " << instruments[i].Notes[j].EndNote << "\n";
-            outputFile << "          Base Note: " << instruments[i].Notes[j].RootKey << "\n";
-            outputFile << "          Volume: " << instruments[i].Notes[j].Volume << "\n";
-            outputFile << "          Pan: " << instruments[i].Notes[j].Pan << "\n";
-            outputFile << "          Attack: " << instruments[i].Notes[j].Attack << "\n";
-            outputFile << "          Hold: " << instruments[i].Notes[j].Hold << "\n";
-            outputFile << "          Decay: " << instruments[i].Notes[j].Decay << "\n";
-            outputFile << "          Sustain: " << instruments[i].Notes[j].Sustain << "\n";
-            outputFile << "          Release: " << instruments[i].Notes[j].Release << "\n\n";
+            outputFile << "          Start Note: " << static_cast<int>(instruments[i].Notes[j].StartNote) << "\n";
+            outputFile << "          End Note: " << static_cast<int>(instruments[i].Notes[j].EndNote) << "\n";
+            outputFile << "          Base Note: " << static_cast<int>(instruments[i].Notes[j].RootKey) << "\n";
+            outputFile << "          Volume: " << static_cast<int>(instruments[i].Notes[j].Volume) << "\n";
+            outputFile << "          Pan: " << static_cast<int>(instruments[i].Notes[j].Pan) << "\n";
+            outputFile << "          Attack: " << static_cast<int>(instruments[i].Notes[j].Attack) << "\n";
+            outputFile << "          Hold: " << static_cast<int>(instruments[i].Notes[j].Hold) << "\n";
+            outputFile << "          Decay: " << static_cast<int>(instruments[i].Notes[j].Decay) << "\n";
+            outputFile << "          Sustain: " << static_cast<int>(instruments[i].Notes[j].Sustain) << "\n";
+            outputFile << "          Release: " << static_cast<int>(instruments[i].Notes[j].Release) << "\n";
         }
     }
 
