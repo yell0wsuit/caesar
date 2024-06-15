@@ -125,7 +125,7 @@ void PrintAllDetails(const vector<CbnkInst> &instruments, const vector<CbnkCwav>
         outputFile << "  Program Number: " << i << "\n";
         outputFile << "  Note Count: " << instruments[i].NoteCount << "\n";
 
-        for (size_t j = 0; j < instruments[i].Notes.size(); ++j)
+        for (uint32_t j = 0; j < instruments[i].Notes.size(); ++j)
         {
             const CbnkCwav *sample = instruments[i].Notes[j].Cwav;
             outputFile << "        Sample: " << sample->Id << "\n";
