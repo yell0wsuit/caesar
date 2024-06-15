@@ -1,6 +1,6 @@
 # ########## Project setup ##########
-PROJECT(caesar)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8.11)
+PROJECT(caesar)
 
 set(CMAKE_CXX_STANDARD 17)
 
