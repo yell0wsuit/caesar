@@ -178,446 +178,443 @@ Cbnk::~Cbnk()
 
 bool Cbnk::Convert(string cwarPath)
 {
-	uint8_t* pos = Data;
+    uint8_t* pos = Data;
 
-	if (!Common::Assert(pos, 0x43424E4B, ReadFixLen(pos, 4, false))) { return false; }
-	if (!Common::Assert(pos, 0xFEFF, ReadFixLen(pos, 2))) { return false; }
-	if (!Common::Assert(pos, 0x20, ReadFixLen(pos, 2))) { return false; }
+    if (!Common::Assert(pos, 0x43424E4B, ReadFixLen(pos, 4, false))) { return false; }
+    if (!Common::Assert(pos, 0xFEFF, ReadFixLen(pos, 2))) { return false; }
+    if (!Common::Assert(pos, 0x20, ReadFixLen(pos, 2))) { return false; }
 
-	uint32_t cbnkVersion = ReadFixLen(pos, 4);
+    uint32_t cbnkVersion = ReadFixLen(pos, 4);
 
-	if (!Common::Assert<uint64_t>(pos, Length, ReadFixLen(pos, 4))) { return false; }
-	if (!Common::Assert(pos, 0x1, ReadFixLen(pos, 4))) { return false; }
-	if (!Common::Assert(pos, 0x5800, ReadFixLen(pos, 4))) { return false; }
+    if (!Common::Assert<uint64_t>(pos, Length, ReadFixLen(pos, 4))) { return false; }
+    if (!Common::Assert(pos, 0x1, ReadFixLen(pos, 4))) { return false; }
+    if (!Common::Assert(pos, 0x5800, ReadFixLen(pos, 4))) { return false; }
 
-	uint32_t infoOffset = ReadFixLen(pos, 4);
-	uint32_t infoLength = ReadFixLen(pos, 4);
+    uint32_t infoOffset = ReadFixLen(pos, 4);
+    uint32_t infoLength = ReadFixLen(pos, 4);
 
-	if (!Common::Assert(pos, 0x494E464F, ReadFixLen(pos, 4, false))) { return false; }
-	if (!Common::Assert<uint32_t>(pos, infoLength, ReadFixLen(pos, 4))) { return false; }
-	if (!Common::Assert(pos, 0x100, ReadFixLen(pos, 4))) { return false; }
-
-	uint32_t cwavOffset = ReadFixLen(pos, 4);
-
-	if (!Common::Assert(pos, 0x101, ReadFixLen(pos, 4))) { return false; }
-
-	uint32_t instOffset = ReadFixLen(pos, 4);
+    if (!Common::Assert(pos, 0x494E464F, ReadFixLen(pos, 4, false))) { return false; }
+    if (!Common::Assert<uint32_t>(pos, infoLength, ReadFixLen(pos, 4))) { return false; }
+    if (!Common::Assert(pos, 0x100, ReadFixLen(pos, 4))) { return false; }
+
+    uint32_t cwavOffset = ReadFixLen(pos, 4);
+
+    if (!Common::Assert(pos, 0x101, ReadFixLen(pos, 4))) { return false; }
+
+    uint32_t instOffset = ReadFixLen(pos, 4);
 
-	pos = Data + infoOffset + 8 + cwavOffset;
-
-	uint32_t cwavCount = ReadFixLen(pos, 4);
+    pos = Data + infoOffset + 8 + cwavOffset;
+
+    uint32_t cwavCount = ReadFixLen(pos, 4);
 
-	vector<CbnkCwav> cwavs;
-
-	for (uint32_t i = 0; i < cwavCount; ++i)
-	{
-		pos = Data + infoOffset + 8 + cwavOffset + 4 + (i * 8);
-
-		CbnkCwav cwav;
-		cwav.Cwar = ReadFixLen(pos, 4) - 0x5000000;
-		cwav.Id = ReadFixLen(pos, 4);
-
-		size_t j = 0;
-		auto it = Cwars->begin();
-
-		for (; it != Cwars->end(); ++it, ++j)
-		{
-			if (j == cwav.Cwar)
-			{
-				break;
-			}
-		}
+    vector<CbnkCwav> cwavs;
+
+    for (uint32_t i = 0; i < cwavCount; ++i)
+    {
+        pos = Data + infoOffset + 8 + cwavOffset + 4 + (i * 8);
+
+        CbnkCwav cwav;
+        cwav.Cwar = ReadFixLen(pos, 4) - 0x5000000;
+        cwav.Id = ReadFixLen(pos, 4);
+
+        size_t j = 0;
+        auto it = Cwars->begin();
+
+        for (; it != Cwars->end(); ++it, ++j)
+        {
+            if (j == cwav.Cwar)
+            {
+                break;
+            }
+        }
 
-		if (cwav.Id < 0xF000)
-		{
-			ifstream ifs(cwarPath + "/" + it->second->FileName.substr(0, it->second->FileName.length() - 6) + "/" + to_string(cwav.Id) + ".wav", ios::binary | ios::ate);
+        if (cwav.Id < 0xF000)
+        {
+            ifstream ifs(cwarPath + "/" + it->second->FileName.substr(0, it->second->FileName.length() - 6) + "/" + to_string(cwav.Id) + ".wav", ios::binary | ios::ate);
 
-			streamoff cwavLength = ifs.tellg();
-			uint8_t* cwavData = new uint8_t[cwavLength];
+            streamoff cwavLength = ifs.tellg();
+            uint8_t* cwavData = new uint8_t[cwavLength];
 
-			Common::Push(string(to_string(cwav.Id) + ".wav"), cwavData);
+            Common::Push(string(to_string(cwav.Id) + ".wav"), cwavData);
 
-			ifs.seekg(0, ios::beg);
-			ifs.read(reinterpret_cast<char*>(cwavData), cwavLength);
-			ifs.close();
+            ifs.seekg(0, ios::beg);
+            ifs.read(reinterpret_cast<char*>(cwavData), cwavLength);
+            ifs.close();
 
-			pos = cwavData;
+            pos = cwavData;
 
-			if (!Common::Assert(pos, 0x52494646, ReadFixLen(pos, 4, false))) { return false; }
-			if (!Common::Assert<uint64_t>(pos, cwavLength - 8, ReadFixLen(pos, 4))) { return false; }
-			if (!Common::Assert(pos, 0x57415645, ReadFixLen(pos, 4, false))) { return false; }
-			if (!Common::Assert(pos, 0x666D7420, ReadFixLen(pos, 4, false))) { return false; }
-			if (!Common::Assert(pos, 0x10, ReadFixLen(pos, 4))) { return false; }
-			if (!Common::Assert(pos, 0x1, ReadFixLen(pos, 2))) { return false; }
+            if (!Common::Assert(pos, 0x52494646, ReadFixLen(pos, 4, false))) { return false; }
+            if (!Common::Assert<uint64_t>(pos, cwavLength - 8, ReadFixLen(pos, 4))) { return false; }
+            if (!Common::Assert(pos, 0x57415645, ReadFixLen(pos, 4, false))) { return false; }
+            if (!Common::Assert(pos, 0x666D7420, ReadFixLen(pos, 4, false))) { return false; }
+            if (!Common::Assert(pos, 0x10, ReadFixLen(pos, 4))) { return false; }
+            if (!Common::Assert(pos, 0x1, ReadFixLen(pos, 2))) { return false; }
 
-			cwav.ChanCount = ReadFixLen(pos, 2);
-			cwav.SampleRate = ReadFixLen(pos, 4);
-			uint32_t byteRate = ReadFixLen(pos, 4);
-			uint16_t blockAlign = ReadFixLen(pos, 2);
-			uint16_t bitsPerSample = ReadFixLen(pos, 2);
+            cwav.ChanCount = ReadFixLen(pos, 2);
+            cwav.SampleRate = ReadFixLen(pos, 4);
+            uint32_t byteRate = ReadFixLen(pos, 4);
+            uint16_t blockAlign = ReadFixLen(pos, 2);
+            uint16_t bitsPerSample = ReadFixLen(pos, 2);
 
-			if (!Common::Assert(pos - 8, byteRate, (cwav.SampleRate * cwav.ChanCount) * (bitsPerSample / 8))) { return false; }
-			if (!Common::Assert<uint16_t>(pos - 4, blockAlign, cwav.ChanCount * (bitsPerSample / 8))) { return false; }
-			if (!Common::Assert(pos, 0x64617461, ReadFixLen(pos, 4, false))) { return false; }
+            if (!Common::Assert(pos - 8, byteRate, (cwav.SampleRate * cwav.ChanCount) * (bitsPerSample / 8))) { return false; }
+            if (!Common::Assert<uint16_t>(pos - 4, blockAlign, cwav.ChanCount * (bitsPerSample / 8))) { return false; }
+            if (!Common::Assert(pos, 0x64617461, ReadFixLen(pos, 4, false))) { return false; }
 
-			uint32_t cwavDataLength = ReadFixLen(pos, 4);
+            uint32_t cwavDataLength = ReadFixLen(pos, 4);
 
-			while (pos < (cwavData + 44 + cwavDataLength))
-			{
-				cwav.LeftSamples.push_back(ReadFixLen(pos, 2));
+            while (pos < (cwavData + 44 + cwavDataLength))
+            {
+                cwav.LeftSamples.push_back(ReadFixLen(pos, 2));
 
-				if (cwav.ChanCount == 2)
-				{
-					cwav.RightSamples.push_back(ReadFixLen(pos, 2));
-				}
-			}
+                if (cwav.ChanCount == 2)
+                {
+                    cwav.RightSamples.push_back(ReadFixLen(pos, 2));
+                }
+            }
 
-			for (; pos < (cwavData + cwavLength); pos -= 3)
-			{
-				if (ReadFixLen(pos, 4, false) == 0x736D706C)
-				{
-					uint32_t smplLength = ReadFixLen(pos, 4);
-					uint32_t manufacturer = ReadFixLen(pos, 4);
-					uint32_t product = ReadFixLen(pos, 4);
-					uint32_t samplePeriod = ReadFixLen(pos, 4);
-					uint32_t midiUnityNote = ReadFixLen(pos, 4);
-					uint32_t midiPitchFraction = ReadFixLen(pos, 4);
-					uint32_t smpteFormat = ReadFixLen(pos, 4);
-					uint32_t smpteOffset = ReadFixLen(pos, 4);
-					uint32_t sampleLoops = ReadFixLen(pos, 4);
-					uint32_t samplerData = ReadFixLen(pos, 4);
+            for (; pos < (cwavData + cwavLength); pos -= 3)
+            {
+                if (ReadFixLen(pos, 4, false) == 0x736D706C)
+                {
+                    uint32_t smplLength = ReadFixLen(pos, 4);
+                    uint32_t manufacturer = ReadFixLen(pos, 4);
+                    uint32_t product = ReadFixLen(pos, 4);
+                    uint32_t samplePeriod = ReadFixLen(pos, 4);
+                    uint32_t midiUnityNote = ReadFixLen(pos, 4);
+                    uint32_t midiPitchFraction = ReadFixLen(pos, 4);
+                    uint32_t smpteFormat = ReadFixLen(pos, 4);
+                    uint32_t smpteOffset = ReadFixLen(pos, 4);
+                    uint32_t sampleLoops = ReadFixLen(pos, 4);
+                    uint32_t samplerData = ReadFixLen(pos, 4);
 
-					vector<WaveSmpl> smpls;
+                    vector<WaveSmpl> smpls;
 
-					for (uint32_t j = 0; j < sampleLoops; ++j)
-					{
-						WaveSmpl smpl{};
-						smpl.CuePointId = ReadFixLen(pos, 4);
-						smpl.Type = ReadFixLen(pos, 4);
-						smpl.Start = ReadFixLen(pos, 4);
-						smpl.End = ReadFixLen(pos, 4);
-						smpl.Fraction = ReadFixLen(pos, 4);
-						smpl.PlayCount = ReadFixLen(pos, 4);
+                    for (uint32_t j = 0; j < sampleLoops; ++j)
+                    {
+                        WaveSmpl smpl{};
+                        smpl.CuePointId = ReadFixLen(pos, 4);
+                        smpl.Type = ReadFixLen(pos, 4);
+                        smpl.Start = ReadFixLen(pos, 4);
+                        smpl.End = ReadFixLen(pos, 4);
+                        smpl.Fraction = ReadFixLen(pos, 4);
+                        smpl.PlayCount = ReadFixLen(pos, 4);
 
-						smpls.push_back(smpl);
-					}
+                        smpls.push_back(smpl);
+                    }
 
-					cwav.Loop = true;
-					cwav.LoopStart = smpls[0].Start;
-					cwav.LoopEnd = smpls[0].End;
+                    cwav.Loop = true;
+                    cwav.LoopStart = smpls[0].Start;
+                    cwav.LoopEnd = smpls[0].End;
 
-					break;
-				}
-			}
+                    break;
+                }
+            }
 
-			if (!cwav.Loop)
-			{
-				cwav.LoopStart = 0;
-				cwav.LoopEnd = cwav.LeftSamples.size();
-			}
+            if (!cwav.Loop)
+            {
+                cwav.LoopStart = 0;
+                cwav.LoopEnd = cwav.LeftSamples.size();
+            }
 
-			Common::Pop();
+            Common::Pop();
 
-			delete[] cwavData;
-		}
+            delete[] cwavData;
+        }
 
-		cwavs.push_back(cwav);
-	}
+        cwavs.push_back(cwav);
+    }
 
-	pos = Data + infoOffset + 8 + instOffset;
+    pos = Data + infoOffset + 8 + instOffset;
 
-	uint32_t instCount = ReadFixLen(pos, 4);
+    uint32_t instCount = ReadFixLen(pos, 4);
 
-	vector<CbnkInst> insts;
+    vector<CbnkInst> insts;
 
-	for (uint32_t i = 0; i < instCount; ++i)
-	{
-		CbnkInst inst;
+    for (uint32_t i = 0; i < instCount; ++i)
+    {
+        CbnkInst inst;
 
-		if (ReadFixLen(pos, 4) != 0x5900)
-		{
-			inst.Exists = false;
-		}
+        if (ReadFixLen(pos, 4) != 0x5900)
+        {
+            inst.Exists = false;
+        }
 
-		inst.Offset = Data + infoOffset + 24 + ReadFixLen(pos, 4);
+        inst.Offset = Data + infoOffset + 24 + ReadFixLen(pos, 4);
 
-		insts.push_back(inst);
-	}
+        insts.push_back(inst);
+    }
 
-	for (uint32_t i = 0; i < instCount; ++i)
-	{
-		if (!insts[i].Exists)
-		{
-			continue;
-		}
+    for (uint32_t i = 0; i < instCount; ++i)
+    {
+        if (!insts[i].Exists)
+        {
+            continue;
+        }
 
-		pos = insts[i].Offset;
+        pos = insts[i].Offset;
 
-		uint32_t instType = ReadFixLen(pos, 4);
+        uint32_t instType = ReadFixLen(pos, 4);
 
-		if (!Common::Assert(pos, 0x8, ReadFixLen(pos, 4))) { return false; }
+        if (!Common::Assert(pos, 0x8, ReadFixLen(pos, 4))) { return false; }
 
-		switch (instType)
-		{
-			case 0x6000:
-			{
-				insts[i].NoteCount = 1;
+        switch (instType)
+        {
+            case 0x6000:
+            {
+                insts[i].NoteCount = 1;
 
-				CbnkNote note{};
-				note.StartNote = 0;
-				note.EndNote = 127;
+                CbnkNote note{};
+                note.StartNote = 0;
+                note.EndNote = 127;
 
-				insts[i].Notes.push_back(note);
+                insts[i].Notes.push_back(note);
 
-				break;
-			}
+                break;
+            }
 
-			case 0x6001:
-			{
-				insts[i].NoteCount = ReadFixLen(pos, 4);
+            case 0x6001:
+            {
+                insts[i].NoteCount = ReadFixLen(pos, 4);
 
-				for (uint32_t j = 0; j < insts[i].NoteCount; ++j)
-				{
-					CbnkNote note{};
-					note.StartNote = j == 0 ? 0 : insts[i].Notes[j - 1].EndNote + 1;
-					note.EndNote = ReadFixLen(pos, 1);
+                for (uint32_t j = 0; j < insts[i].NoteCount; ++j)
+                {
+                    CbnkNote note{};
+                    note.StartNote = j == 0 ? 0 : insts[i].Notes[j - 1].EndNote + 1;
+                    note.EndNote = ReadFixLen(pos, 1);
 
-					insts[i].Notes.push_back(note);
-				}
+                    insts[i].Notes.push_back(note);
+                }
 
-				uint8_t padding = insts[i].NoteCount % 4;
+                uint8_t padding = insts[i].NoteCount % 4;
 
-				if (padding)
-				{
-					if (!Common::Assert(pos, 0x0, ReadFixLen(pos, 4 - padding))) { return false; }
-				}
+                if (padding)
+                {
+                    if (!Common::Assert(pos, 0x0, ReadFixLen(pos, 4 - padding))) { return false; }
+                }
 
-				break;
-			}
+                break;
+            }
 
-			case 0x6002:
-			{
-				insts[i].NoteCount = ReadFixLen(pos, 2, false) + 1;
+            case 0x6002:
+            {
+                insts[i].NoteCount = ReadFixLen(pos, 2, false) + 1;
 
-				for (uint32_t j = 0; j < insts[i].NoteCount; ++j)
-				{
-					CbnkNote note{};
-					note.StartNote = j;
-					note.EndNote = j;
+                for (uint32_t j = 0; j < insts[i].NoteCount; ++j)
+                {
+                    CbnkNote note{};
+                    note.StartNote = j;
+                    note.EndNote = j;
 
-					insts[i].Notes.push_back(note);
-				}
+                    insts[i].Notes.push_back(note);
+                }
 
-				if (!Common::Assert(pos, 0x0, ReadFixLen(pos, 2))) { return false; }
+                if (!Common::Assert(pos, 0x0, ReadFixLen(pos, 2))) { return false; }
 
-				insts[i].IsDrumKit = true;
-
-				break;
-			}
+                insts[i].IsDrumKit = true;
 
-			default:
-			{
-				Common::Error(pos - 8, "A valid instrument type", instType);
-
-				return false;
-			}
-		}
-
-		for (uint32_t j = 0; j < insts[i].NoteCount; ++j)
-		{
-			if (ReadFixLen(pos, 4) != 0x5901)
-			{
-				insts[i].Notes[j].Exists = false;
-			}
-
-			insts[i].Notes[j].Offset = insts[i].Offset + 8 + ReadFixLen(pos, 4);
-		}
-
-		for (uint32_t j = 0; j < insts[i].NoteCount; ++j)
-		{
-			if (!insts[i].Notes[j].Exists)
-			{
-				continue;
-			}
-
-			pos = insts[i].Notes[j].Offset;
-
-			uint32_t id = ReadFixLen(pos, 4);
-
-			if (!Common::Assert(pos, 0x8, ReadFixLen(pos, 4))) { return false; }
-			Common::Analyse("Note 0x08", ReadFixLen(pos, 4));
-			Common::Analyse("Note 0x0C", ReadFixLen(pos, 4));
-
-			if (id == 0x6001)
-			{
-				Common::Analyse("Note 0x6001 0x10", ReadFixLen(pos, 4));
-				Common::Analyse("Note 0x6001 0x14", ReadFixLen(pos, 4));
-				Common::Analyse("Note 0x6001 0x18", ReadFixLen(pos, 4));
-				Common::Analyse("Note 0x6001 0x1C", ReadFixLen(pos, 4));
-			}
-
-			uint32_t cwav = ReadFixLen(pos, 4);
-
-			if (cwav < cwavs.size())
-			{
-				insts[i].Notes[j].Cwav = &cwavs[cwav];
-			}
-			else
-			{
-				Common::Warning(pos - 4, "CWAV " + to_string(cwav) + " does not exist");
-
-				insts[i].Notes[j].Cwav = &cwavs[0];
-			}
-
-			Common::Analyse("Note 0x14", ReadFixLen(pos, 4));
-
-			insts[i].Notes[j].RootKey = ReadFixLen(pos, 4);
-			insts[i].Notes[j].Cwav->Key = insts[i].Notes[j].RootKey;
-			insts[i].Notes[j].Volume = ReadFixLen(pos, 4);
-			insts[i].Notes[j].Pan = ReadFixLen(pos, 4);
-
-			Common::Analyse("Note 0x24", ReadFixLen(pos, 4));
-			Common::Analyse("Note 0x28", ReadFixLen(pos, 2));
-
-			insts[i].Notes[j].Interpolation = ReadFixLen(pos, 1);
-
-			if (!Common::Assert(pos, 0x0, ReadFixLen(pos, 1))) { return false; }
-			Common::Analyse("Note 0x2C", ReadFixLen(pos, 4));
-			Common::Analyse("Note 0x30", ReadFixLen(pos, 4));
-			Common::Analyse("Note 0x34", ReadFixLen(pos, 4));
-
-			insts[i].Notes[j].Attack = ReadFixLen(pos, 1);
-			insts[i].Notes[j].Decay = ReadFixLen(pos, 1);
-			insts[i].Notes[j].Sustain = ReadFixLen(pos, 1);
-			insts[i].Notes[j].Hold = ReadFixLen(pos, 1);
-			insts[i].Notes[j].Release = ReadFixLen(pos, 1);
-
-			if (!Common::Assert(pos, 0x0, ReadFixLen(pos, 3))) { return false; }
-		}
-	}
-
-	SoundFont sf2;
-	sf2.set_sound_engine("EMU8000");
-	sf2.set_bank_name(FileName.substr(0, FileName.length() - 6));
-	sf2.set_rom_name("ROM");
-	sf2.set_software("Caesar");
-
-	map<uint32_t, shared_ptr<SFSample>> leftSamples;
-	map<uint32_t, shared_ptr<SFSample>> rightSamples;
-
-	for (uint32_t i = 0; i < cwavCount; ++i)
-	{
-		if (cwavs[i].Id >= 0xF000)
-		{
-			continue;
-		}
-
-		if (cwavs[i].ChanCount == 1)
-		{
-			leftSamples[cwavs[i].Id] = sf2.NewSample(to_string(cwavs[i].Id), cwavs[i].LeftSamples, cwavs[i].LoopStart, cwavs[i].LoopEnd, cwavs[i].SampleRate, cwavs[i].Key, 0);
-		}
-		else
-		{
-			leftSamples[cwavs[i].Id] = sf2.NewSample(to_string(cwavs[i].Id) + "l", cwavs[i].LeftSamples, cwavs[i].LoopStart, cwavs[i].LoopEnd, cwavs[i].SampleRate, cwavs[i].Key, 0);
-			rightSamples[cwavs[i].Id] = sf2.NewSample(to_string(cwavs[i].Id) + "r", cwavs[i].RightSamples, cwavs[i].LoopStart, cwavs[i].LoopEnd, cwavs[i].SampleRate, cwavs[i].Key, 0);
-
-			leftSamples[cwavs[i].Id]->set_link(rightSamples[cwavs[i].Id]);
-			rightSamples[cwavs[i].Id]->set_link(leftSamples[cwavs[i].Id]);
-
-			leftSamples[cwavs[i].Id]->set_type(SFSampleLink::kLeftSample);
-			rightSamples[cwavs[i].Id]->set_type(SFSampleLink::kRightSample);
-		}
-	}
-
-	vector<shared_ptr<SFInstrument>> instruments;
-
-	for (uint32_t i = 0; i < instCount; ++i)
-	{
-		if (insts[i].Exists)
-		{
-			vector<SFInstrumentZone> instrumentZones;
-
-			for (uint32_t j = 0; j < insts[i].NoteCount; ++j)
-			{
-				if ((insts[i].Notes[j].Exists) && (insts[i].Notes[j].Cwav->Id < 0xF000))
-				{
-					size_t k = 0;
-					auto it = Cwars->begin();
-
-					for (; it != Cwars->end(); ++it, ++k)
-					{
-						if (k == insts[i].Notes[j].Cwav->Cwar)
-						{
-							break;
-						}
-					}
-
-					SFGeneratorItem keyRange(SFGenerator::kKeyRange, RangesType(insts[i].Notes[j].StartNote, insts[i].Notes[j].EndNote));
-					SFGeneratorItem overridingRootKey(SFGenerator::kOverridingRootKey, insts[i].Notes[j].RootKey);
-					SFGeneratorItem initialAttenuation(SFGenerator::kInitialAttenuation, ConvertVolume(insts[i].Notes[j].Volume));
-					SFGeneratorItem pan(SFGenerator::kPan, ConvertPan(insts[i].Notes[j].Pan));
-					SFGeneratorItem attackVolEnv(SFGenerator::kAttackVolEnv, ConvertAttack(insts[i].Notes[j].Attack));
-					SFGeneratorItem holdVolEnv(SFGenerator::kHoldVolEnv, ConvertHold(insts[i].Notes[j].Hold));
-					SFGeneratorItem decayVolEnv(SFGenerator::kDecayVolEnv, ConvertDecay(insts[i].Notes[j].Decay, insts[i].Notes[j].Sustain));
-					SFGeneratorItem releaseVolEnv(SFGenerator::kReleaseVolEnv, ConvertRelease(insts[i].Notes[j].Release, insts[i].Notes[j].Sustain));
-					SFGeneratorItem sustainVolEnv(SFGenerator::kSustainVolEnv, ConvertSustain(insts[i].Notes[j].Sustain));
-					SFGeneratorItem sampleModes(SFGenerator::kSampleModes, it->second->Cwavs[insts[i].Notes[j].Cwav->Id]->SampleMode);
-
-					if (insts[i].Notes[j].Cwav->ChanCount == 1)
-					{
-						instrumentZones.push_back(SFInstrumentZone(leftSamples[insts[i].Notes[j].Cwav->Id], vector<SFGeneratorItem> { keyRange, overridingRootKey, initialAttenuation, pan, attackVolEnv, holdVolEnv, decayVolEnv, releaseVolEnv, sustainVolEnv, sampleModes }, vector<SFModulatorItem> { }));
-					}
-					else
-					{
-						if (!P)
-						{
-							SFGeneratorItem left(SFGenerator::kPan, -500);
-							SFGeneratorItem right(SFGenerator::kPan, 500);
-
-							instrumentZones.push_back(SFInstrumentZone(leftSamples[insts[i].Notes[j].Cwav->Id], vector<SFGeneratorItem> { keyRange, overridingRootKey, initialAttenuation, left, attackVolEnv, holdVolEnv, decayVolEnv, releaseVolEnv, sustainVolEnv, sampleModes }, vector<SFModulatorItem> { }));
-							instrumentZones.push_back(SFInstrumentZone(rightSamples[insts[i].Notes[j].Cwav->Id], vector<SFGeneratorItem> { keyRange, overridingRootKey, initialAttenuation, right, attackVolEnv, holdVolEnv, decayVolEnv, releaseVolEnv, sustainVolEnv, sampleModes }, vector<SFModulatorItem> { }));
-						}
-						else
-						{
-							SFGeneratorItem left(SFGenerator::kPan, ((static_cast<double>(insts[i].Notes[j].Pan) / 128.0f) * 500) - 500);
-							SFGeneratorItem right(SFGenerator::kPan, (static_cast<double>(insts[i].Notes[j].Pan) / 128.0f) * 500);
-
-							instrumentZones.push_back(SFInstrumentZone(leftSamples[insts[i].Notes[j].Cwav->Id], vector<SFGeneratorItem> { keyRange, overridingRootKey, initialAttenuation, left, attackVolEnv, holdVolEnv, decayVolEnv, releaseVolEnv, sustainVolEnv, sampleModes }, vector<SFModulatorItem> { }));
-							instrumentZones.push_back(SFInstrumentZone(rightSamples[insts[i].Notes[j].Cwav->Id], vector<SFGeneratorItem> { keyRange, overridingRootKey, initialAttenuation, right, attackVolEnv, holdVolEnv, decayVolEnv, releaseVolEnv, sustainVolEnv, sampleModes }, vector<SFModulatorItem> { }));
-						}
-					}
-				}
-			}
-
-			if (!instrumentZones.empty())
-			{
-				instruments.push_back(sf2.NewInstrument(to_string(i), instrumentZones));
-			}
-			else
-			{
-				instruments.push_back(nullptr);
-			}
-		}
-		else
-		{
-			instruments.push_back(nullptr);
-		}
-	}
-
-	for (uint32_t i = 0; i < instCount; ++i)
-	{
-		if (insts[i].Exists && (instruments[i] != nullptr))
-		{
-			sf2.NewPreset(instruments[i]->name(), i, !insts[i].IsDrumKit ? 0 : 128, vector<SFPresetZone> { SFPresetZone(instruments[i]) });
-		}
-	}
-
-	ofstream ofs(FileName.substr(0, FileName.length() - 5).append("sf2"), ios::binary);
-	sf2.Write(ofs);
-	ofs.close();
-
-	// Dump instrument metadata to a text file
-	dumpInstrumentMetadata(FileName.substr(0, FileName.length() - 5).append("_metadata.txt"), insts, cwarPath, *Cwars);
-
-	return true;
+                break;
+            }
+
+            default:
+            {
+                Common::Error(pos - 8, "A valid instrument type", instType);
+
+                return false;
+            }
+        }
+
+        for (uint32_t j = 0; j < insts[i].NoteCount; ++j)
+        {
+            if (ReadFixLen(pos, 4) != 0x5901)
+            {
+                insts[i].Notes[j].Exists = false;
+            }
+
+            insts[i].Notes[j].Offset = insts[i].Offset + 8 + ReadFixLen(pos, 4);
+        }
+
+        for (uint32_t j = 0; j < insts[i].NoteCount; ++j)
+        {
+            if (!insts[i].Notes[j].Exists)
+            {
+                continue;
+            }
+
+            pos = insts[i].Notes[j].Offset;
+
+            uint32_t id = ReadFixLen(pos, 4);
+
+            if (!Common::Assert(pos, 0x8, ReadFixLen(pos, 4))) { return false; }
+            Common::Analyse("Note 0x08", ReadFixLen(pos, 4));
+            Common::Analyse("Note 0x0C", ReadFixLen(pos, 4));
+
+            if (id == 0x6001)
+            {
+                Common::Analyse("Note 0x6001 0x10", ReadFixLen(pos, 4));
+                Common::Analyse("Note 0x6001 0x14", ReadFixLen(pos, 4));
+                Common::Analyse("Note 0x6001 0x18", ReadFixLen(pos, 4));
+                Common::Analyse("Note 0x6001 0x1C", ReadFixLen(pos, 4));
+            }
+
+            uint32_t cwav = ReadFixLen(pos, 4);
+
+            if (cwav < cwavs.size())
+            {
+                insts[i].Notes[j].Cwav = &cwavs[cwav];
+            }
+            else
+            {
+                Common::Warning(pos - 4, "CWAV " + to_string(cwav) + " does not exist");
+
+                insts[i].Notes[j].Cwav = &cwavs[0];
+            }
+
+            Common::Analyse("Note 0x14", ReadFixLen(pos, 4));
+
+            insts[i].Notes[j].RootKey = ReadFixLen(pos, 4);
+            insts[i].Notes[j].Cwav->Key = insts[i].Notes[j].RootKey;
+            insts[i].Notes[j].Volume = ReadFixLen(pos, 4);
+            insts[i].Notes[j].Pan = ReadFixLen(pos, 4);
+
+            Common::Analyse("Note 0x24", ReadFixLen(pos, 4));
+
+            insts[i].Notes[j].Interpolation = ReadFixLen(pos, 1);
+
+            if (!Common::Assert(pos, 0x0, ReadFixLen(pos, 1))) { return false; }
+            Common::Analyse("Note 0x28", ReadFixLen(pos, 2));
+
+            insts[i].Notes[j].Attack = ReadFixLen(pos, 1);
+            insts[i].Notes[j].Decay = ReadFixLen(pos, 1);
+            insts[i].Notes[j].Sustain = ReadFixLen(pos, 1);
+            insts[i].Notes[j].Hold = ReadFixLen(pos, 1);
+            insts[i].Notes[j].Release = ReadFixLen(pos, 1);
+
+            if (!Common::Assert(pos, 0x0, ReadFixLen(pos, 3))) { return false; }
+        }
+    }
+
+    SoundFont sf2;
+    sf2.set_sound_engine("EMU8000");
+    sf2.set_bank_name(FileName.substr(0, FileName.length() - 6));
+    sf2.set_rom_name("ROM");
+    sf2.set_software("Caesar");
+
+    map<uint32_t, shared_ptr<SFSample>> leftSamples;
+    map<uint32_t, shared_ptr<SFSample>> rightSamples;
+
+    for (uint32_t i = 0; i < cwavCount; ++i)
+    {
+        if (cwavs[i].Id >= 0xF000)
+        {
+            continue;
+        }
+
+        if (cwavs[i].ChanCount == 1)
+        {
+            leftSamples[cwavs[i].Id] = sf2.NewSample(to_string(cwavs[i].Id), cwavs[i].LeftSamples, cwavs[i].LoopStart, cwavs[i].LoopEnd, cwavs[i].SampleRate, cwavs[i].Key, 0);
+        }
+        else
+        {
+            leftSamples[cwavs[i].Id] = sf2.NewSample(to_string(cwavs[i].Id) + "l", cwavs[i].LeftSamples, cwavs[i].LoopStart, cwavs[i].LoopEnd, cwavs[i].SampleRate, cwavs[i].Key, 0);
+            rightSamples[cwavs[i].Id] = sf2.NewSample(to_string(cwavs[i].Id) + "r", cwavs[i].RightSamples, cwavs[i].LoopStart, cwavs[i].LoopEnd, cwavs[i].SampleRate, cwavs[i].Key, 0);
+
+            leftSamples[cwavs[i].Id]->set_link(rightSamples[cwavs[i].Id]);
+            rightSamples[cwavs[i].Id]->set_link(leftSamples[cwavs[i].Id]);
+
+            leftSamples[cwavs[i].Id]->set_type(SFSampleLink::kLeftSample);
+            rightSamples[cwavs[i].Id]->set_type(SFSampleLink::kRightSample);
+        }
+    }
+
+    vector<shared_ptr<SFInstrument>> instruments;
+
+    for (uint32_t i = 0; i < instCount; ++i)
+    {
+        if (insts[i].Exists)
+        {
+            vector<SFInstrumentZone> instrumentZones;
+
+            for (uint32_t j = 0; j < insts[i].NoteCount; ++j)
+            {
+                if ((insts[i].Notes[j].Exists) && (insts[i].Notes[j].Cwav->Id < 0xF000))
+                {
+                    size_t k = 0;
+                    auto it = Cwars->begin();
+
+                    for (; it != Cwars->end(); ++it, ++k)
+                    {
+                        if (k == insts[i].Notes[j].Cwav->Cwar)
+                        {
+                            break;
+                        }
+                    }
+
+                    SFGeneratorItem keyRange(SFGenerator::kKeyRange, RangesType(insts[i].Notes[j].StartNote, insts[i].Notes[j].EndNote));
+                    SFGeneratorItem overridingRootKey(SFGenerator::kOverridingRootKey, insts[i].Notes[j].RootKey);
+                    SFGeneratorItem initialAttenuation(SFGenerator::kInitialAttenuation, ConvertVolume(insts[i].Notes[j].Volume));
+                    SFGeneratorItem pan(SFGenerator::kPan, ConvertPan(insts[i].Notes[j].Pan));
+                    SFGeneratorItem attackVolEnv(SFGenerator::kAttackVolEnv, ConvertAttack(insts[i].Notes[j].Attack));
+                    SFGeneratorItem holdVolEnv(SFGenerator::kHoldVolEnv, ConvertHold(insts[i].Notes[j].Hold));
+                    SFGeneratorItem decayVolEnv(SFGenerator::kDecayVolEnv, ConvertDecay(insts[i].Notes[j].Decay, insts[i].Notes[j].Sustain));
+                    SFGeneratorItem releaseVolEnv(SFGenerator::kReleaseVolEnv, ConvertRelease(insts[i].Notes[j].Release, insts[i].Notes[j].Sustain));
+                    SFGeneratorItem sustainVolEnv(SFGenerator::kSustainVolEnv, ConvertSustain(insts[i].Notes[j].Sustain));
+                    SFGeneratorItem sampleModes(SFGenerator::kSampleModes, it->second->Cwavs[insts[i].Notes[j].Cwav->Id]->SampleMode);
+
+                    if (insts[i].Notes[j].Cwav->ChanCount == 1)
+                    {
+                        instrumentZones.push_back(SFInstrumentZone(leftSamples[insts[i].Notes[j].Cwav->Id], vector<SFGeneratorItem> { keyRange, overridingRootKey, initialAttenuation, pan, attackVolEnv, holdVolEnv, decayVolEnv, releaseVolEnv, sustainVolEnv, sampleModes }, vector<SFModulatorItem> { }));
+                    }
+                    else
+                    {
+                        if (!P)
+                        {
+                            SFGeneratorItem left(SFGenerator::kPan, -500);
+                            SFGeneratorItem right(SFGenerator::kPan, 500);
+
+                            instrumentZones.push_back(SFInstrumentZone(leftSamples[insts[i].Notes[j].Cwav->Id], vector<SFGeneratorItem> { keyRange, overridingRootKey, initialAttenuation, left, attackVolEnv, holdVolEnv, decayVolEnv, releaseVolEnv, sustainVolEnv, sampleModes }, vector<SFModulatorItem> { }));
+                            instrumentZones.push_back(SFInstrumentZone(rightSamples[insts[i].Notes[j].Cwav->Id], vector<SFGeneratorItem> { keyRange, overridingRootKey, initialAttenuation, right, attackVolEnv, holdVolEnv, decayVolEnv, releaseVolEnv, sustainVolEnv, sampleModes }, vector<SFModulatorItem> { }));
+                        }
+                        else
+                        {
+                            SFGeneratorItem left(SFGenerator::kPan, ((static_cast<double>(insts[i].Notes[j].Pan) / 128.0f) * 500) - 500);
+                            SFGeneratorItem right(SFGenerator::kPan, (static_cast<double>(insts[i].Notes[j].Pan) / 128.0f) * 500);
+
+                            instrumentZones.push_back(SFInstrumentZone(leftSamples[insts[i].Notes[j].Cwav->Id], vector<SFGeneratorItem> { keyRange, overridingRootKey, initialAttenuation, left, attackVolEnv, holdVolEnv, decayVolEnv, releaseVolEnv, sustainVolEnv, sampleModes }, vector<SFModulatorItem> { }));
+                            instrumentZones.push_back(SFInstrumentZone(rightSamples[insts[i].Notes[j].Cwav->Id], vector<SFGeneratorItem> { keyRange, overridingRootKey, initialAttenuation, right, attackVolEnv, holdVolEnv, decayVolEnv, releaseVolEnv, sustainVolEnv, sampleModes }, vector<SFModulatorItem> { }));
+                        }
+                    }
+                }
+            }
+
+            if (!instrumentZones.empty())
+            {
+                instruments.push_back(sf2.NewInstrument(to_string(i), instrumentZones));
+            }
+            else
+            {
+                instruments.push_back(nullptr);
+            }
+        }
+        else
+        {
+            instruments.push_back(nullptr);
+        }
+    }
+
+    for (uint32_t i = 0; i < instCount; ++i)
+    {
+        if (insts[i].Exists && (instruments[i] != nullptr))
+        {
+            sf2.NewPreset(instruments[i]->name(), i, !insts[i].IsDrumKit ? 0 : 128, vector<SFPresetZone> { SFPresetZone(instruments[i]) });
+        }
+    }
+
+    ofstream ofs(FileName.substr(0, FileName.length() - 5).append("sf2"), ios::binary);
+    sf2.Write(ofs);
+    ofs.close();
+
+    // Dump instrument metadata to a text file
+    dumpInstrumentMetadata(FileName.substr(0, FileName.length() - 5).append("_metadata.txt"), insts, cwarPath, *Cwars);
+
+    return true;
 }
