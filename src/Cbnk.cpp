@@ -107,6 +107,47 @@ double ConvertSustain(uint8_t sustain)
 	}
 }
 
+void dumpInstrumentMetadata(const string &outputFile, vector<bank> &banks) {
+    ofstream ofs(outputFile);
+
+    if (!ofs.is_open()) {
+        cerr << "Failed to open output file." << endl;
+        return;
+    }
+
+    ofs << "[Instruments]\n";
+
+    for (auto &b : banks) {
+        for (int i = 0; i < 128; ++i) {
+            if (b.instruments[i].exists) {
+                ofs << "Instrument " << i << "\n";
+                ofs << "Program Number: " << static_cast<int>(b.instruments[i].prgNumber) << "\n";
+                ofs << "Type: " << hex << b.instruments[i].type << dec << "\n";
+                ofs << "Note Count: " << b.instruments[i].noteCount << "\n";
+
+                for (uint32_t j = 0; j < b.instruments[i].noteCount; ++j) {
+                    if (b.instruments[i].notes[j].exists) {
+                        ofs << "  Note Region " << j << "\n";
+                        ofs << "    Start Note: " << static_cast<int>(b.instruments[i].notes[j].startNote) << "\n";
+                        ofs << "    End Note: " << static_cast<int>(b.instruments[i].notes[j].endNote) << "\n";
+                        ofs << "    Base Note: " << b.instruments[i].notes[j].baseNote << "\n";
+                        ofs << "    Volume: " << static_cast<int>(b.instruments[i].notes[j].volume) << "\n";
+                        ofs << "    Pan: " << static_cast<int>(b.instruments[i].notes[j].pan) << "\n";
+                        ofs << "    Attack: " << static_cast<int>(b.instruments[i].notes[j].attack) << "\n";
+                        ofs << "    Hold: " << static_cast<int>(b.instruments[i].notes[j].hold) << "\n";
+                        ofs << "    Decay: " << static_cast<int>(b.instruments[i].notes[j].decay) << "\n";
+                        ofs << "    Sustain: " << static_cast<int>(b.instruments[i].notes[j].sustain) << "\n";
+                        ofs << "    Release: " << static_cast<int>(b.instruments[i].notes[j].release) << "\n";
+                    }
+                }
+            }
+        }
+    }
+
+    ofs.close();
+}
+
+
 Cbnk::Cbnk(const char* fileName, map<int, Cwar*>* cwars, bool p) : FileName(fileName), Cwars(cwars), P(p)
 {
 	ifstream ifs(FileName, ios::binary | ios::ate);
@@ -567,6 +608,9 @@ bool Cbnk::Convert(string cwarPath)
 	ofstream ofs(FileName.substr(0, FileName.length() - 5).append("sf2"), ios::binary);
 	sf2.Write(ofs);
 	ofs.close();
+
+	// Dump instrument metadata to a text file
+	dumpInstrumentMetadata(FileName.substr(0, FileName.length() - 5).append("_metadata.txt"), insts);
 
 	return true;
 }
