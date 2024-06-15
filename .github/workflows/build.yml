@@ -30,7 +30,7 @@ jobs:
 
     - name: Archive Release
       run: |
-        $tempDir = New-Item -ItemType Directory -Path "$(Build.ArtifactStagingDirectory)\release"
+        $tempDir = New-Item -ItemType Directory -Path build\temp_release
         Copy-Item -Path build\Release\* -Destination $tempDir.FullName -Recurse -Force
         Compress-Archive -Path $tempDir.FullName\* -DestinationPath build\release.zip
 
