@@ -119,23 +119,33 @@ void dumpInstrumentMetadata(const string &outputFile, vector<CbnkInst> &instrume
 
     for (size_t i = 0; i < instruments.size(); ++i) {
         if (instruments[i].Exists) {
-            ofs << "Instrument " << i << "\n";
-            ofs << "Program Number: " << static_cast<int>(i) << "\n";
-            ofs << "Note Count: " << instruments[i].NoteCount << "\n";
+            ofs << "  Instrument " << i << "\n";
+            ofs << "  Program Number: " << static_cast<int>(i) << "\n";
+            ofs << "  Note Count: " << instruments[i].NoteCount << "\n";
 
             for (uint32_t j = 0; j < instruments[i].NoteCount; ++j) {
                 if (instruments[i].Notes[j].Exists) {
-                    ofs << "  Note Region " << j << "\n";
-                    ofs << "    Start Note: " << static_cast<int>(instruments[i].Notes[j].StartNote) << "\n";
-                    ofs << "    End Note: " << static_cast<int>(instruments[i].Notes[j].EndNote) << "\n";
-                    ofs << "    Base Note: " << instruments[i].Notes[j].RootKey << "\n";
-                    ofs << "    Volume: " << static_cast<int>(instruments[i].Notes[j].Volume) << "\n";
-                    ofs << "    Pan: " << static_cast<int>(instruments[i].Notes[j].Pan) << "\n";
-                    ofs << "    Attack: " << static_cast<int>(instruments[i].Notes[j].Attack) << "\n";
-                    ofs << "    Hold: " << static_cast<int>(instruments[i].Notes[j].Hold) << "\n";
-                    ofs << "    Decay: " << static_cast<int>(instruments[i].Notes[j].Decay) << "\n";
-                    ofs << "    Sustain: " << static_cast<int>(instruments[i].Notes[j].Sustain) << "\n";
-                    ofs << "    Release: " << static_cast<int>(instruments[i].Notes[j].Release) << "\n";
+					// Add sample audio file path
+                    if (instruments[i].Notes[j].Cwav != nullptr) {
+                        const auto &cwav = *instruments[i].Notes[j].Cwav;
+                        auto it = cwars.find(cwav.Cwar);
+                        if (it != cwars.end()) {
+                            const auto &cwar = *it->second;
+                            string sampleFilePath = cwarPath + "/" + cwar.FileName.substr(0, cwar.FileName.length() - 6) + "/" + to_string(cwav.Id) + ".wav";
+                            ofs << "    Sample: " << sampleFilePath << "\n";
+                        }
+                    }
+                    ofs << "        Note Region " << j << "\n";
+                    ofs << "          Start Note: " << static_cast<int>(instruments[i].Notes[j].StartNote) << "\n";
+                    ofs << "          End Note: " << static_cast<int>(instruments[i].Notes[j].EndNote) << "\n";
+                    ofs << "          Base Note: " << instruments[i].Notes[j].RootKey << "\n";
+                    ofs << "          Volume: " << static_cast<int>(instruments[i].Notes[j].Volume) << "\n";
+                    ofs << "          Pan: " << static_cast<int>(instruments[i].Notes[j].Pan) << "\n";
+                    ofs << "          Attack: " << static_cast<int>(instruments[i].Notes[j].Attack) << "\n";
+                    ofs << "          Hold: " << static_cast<int>(instruments[i].Notes[j].Hold) << "\n";
+                    ofs << "          Decay: " << static_cast<int>(instruments[i].Notes[j].Decay) << "\n";
+                    ofs << "          Sustain: " << static_cast<int>(instruments[i].Notes[j].Sustain) << "\n";
+                    ofs << "          Release: " << static_cast<int>(instruments[i].Notes[j].Release) << "\n";
                 }
             }
         }
