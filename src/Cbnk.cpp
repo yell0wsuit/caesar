@@ -449,36 +449,47 @@ bool Cbnk::Convert(string cwarPath)
 	}
 
 	// Dump instrument metadata to a text file
-    ofstream ofs(FileName.substr(0, FileName.length() - 5).append("_metadata.txt"));
+    ofstream metadataOfs(FileName.substr(0, FileName.length() - 5).append("_metadata.txt"));
     if (!ofs.is_open()) {
         cerr << "Failed to open metadata output file." << endl;
         return false;
     }
 
-    ofs << "[Instruments]\n";
+    metadataOfs << "[Instruments]\n";
     for (size_t i = 0; i < insts.size(); ++i) {
         if (insts[i].Exists) {
-            ofs << "Instrument " << i << "\n";
-            ofs << "Program Number: " << static_cast<int>(i) << "\n";
-            ofs << "Note Count: " << insts[i].NoteCount << "\n";
+            metadataOfs << "Instrument " << i << "\n";
+            metadataOfs << "Program Number: " << static_cast<int>(i) << "\n";
+            metadataOfs << "Note Count: " << insts[i].NoteCount << "\n";
             for (uint32_t j = 0; j < insts[i].NoteCount; ++j) {
                 if (insts[i].Notes[j].Exists) {
-					ofs << "    Sample: " << cwav.Id << "\n";
-                    ofs << "  Note Region " << j << "\n";
-                    ofs << "    Start Note: " << static_cast<int>(insts[i].Notes[j].StartNote) << "\n";
-                    ofs << "    End Note: " << static_cast<int>(insts[i].Notes[j].EndNote) << "\n";
-                    ofs << "    Base Note: " << insts[i].Notes[j].RootKey << "\n";
-                    ofs << "    Volume: " << static_cast<int>(insts[i].Notes[j].Volume) << "\n";
-                    ofs << "    Pan: " << static_cast<int>(insts[i].Notes[j].Pan) << "\n";
-                    ofs << "    Attack: " << static_cast<int>(insts[i].Notes[j].Attack) << "\n";
-                    ofs << "    Hold: " << static_cast<int>(insts[i].Notes[j].Hold) << "\n";
-                    ofs << "    Decay: " << static_cast<int>(insts[i].Notes[j].Decay) << "\n";
-                    ofs << "    Sustain: " << static_cast<int>(insts[i].Notes[j].Sustain) << "\n";
-                    ofs << "    Release: " << static_cast<int>(insts[i].Notes[j].Release) << "\n";
+					// Add sample audio file path based on cwavId
+                    uint32_t cwavId = insts[i].Notes[j].CwavId;
+                    if (cwavId < cwavs.size()) {
+                        const auto &cwav = cwavs[cwavId];
+                        auto it = Cwars.find(cwav.Cwar);
+                        if (it != Cwars.end()) {
+                            const auto &cwar = *it->second;
+                            string sampleFilePath = cwarPath + "/" + cwar.FileName.substr(0, cwar.FileName.length() - 6) + "/" + to_string(cwav.Id) + ".wav";
+                            metadataOfs << "    Sample: " << sampleFilePath << "\n";
+                        }
+                    }
+                    metadataOfs << "  Note Region " << j << "\n";
+                    metadataOfs << "    Start Note: " << static_cast<int>(insts[i].Notes[j].StartNote) << "\n";
+                    metadataOfs << "    End Note: " << static_cast<int>(insts[i].Notes[j].EndNote) << "\n";
+                    metadataOfs << "    Base Note: " << insts[i].Notes[j].RootKey << "\n";
+                    metadataOfs << "    Volume: " << static_cast<int>(insts[i].Notes[j].Volume) << "\n";
+                    metadataOfs << "    Pan: " << static_cast<int>(insts[i].Notes[j].Pan) << "\n";
+                    metadataOfs << "    Attack: " << static_cast<int>(insts[i].Notes[j].Attack) << "\n";
+                    metadataOfs << "    Hold: " << static_cast<int>(insts[i].Notes[j].Hold) << "\n";
+                    metadataOfs << "    Decay: " << static_cast<int>(insts[i].Notes[j].Decay) << "\n";
+                    metadataOfs << "    Sustain: " << static_cast<int>(insts[i].Notes[j].Sustain) << "\n";
+                    metadataOfs << "    Release: " << static_cast<int>(insts[i].Notes[j].Release) << "\n";
                 }
             }
         }
     }
+    metadataOfs.close();
 
 	SoundFont sf2;
 	sf2.set_sound_engine("EMU8000");
